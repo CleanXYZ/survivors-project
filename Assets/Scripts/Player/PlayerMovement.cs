@@ -69,7 +69,48 @@ namespace Survivors.Player
             Vector2 nextPosition = body.position + desiredVelocity * Time.fixedDeltaTime;
             Vector2 clampedPosition = mapBounds.ClampPoint(nextPosition, padding);
 
-            body.linearVelocity = (clampedPosition - body.position) / Time.fixedDeltaTime;
+            body.linearVelocity = ResolveBoundaryVelocity(
+                desiredVelocity,
+                body.position,
+                nextPosition,
+                clampedPosition,
+                Time.fixedDeltaTime);
+        }
+
+        private static Vector2 ResolveBoundaryVelocity(
+            Vector2 desiredVelocity,
+            Vector2 currentPosition,
+            Vector2 desiredPosition,
+            Vector2 clampedPosition,
+            float fixedDeltaTime)
+        {
+            Vector2 clampedVelocity = (clampedPosition - currentPosition) / fixedDeltaTime;
+            bool blockedX = !Mathf.Approximately(clampedPosition.x, desiredPosition.x);
+            bool blockedY = !Mathf.Approximately(clampedPosition.y, desiredPosition.y);
+
+            if (blockedX == blockedY)
+            {
+                return blockedX ? clampedVelocity : desiredVelocity;
+            }
+
+            float desiredSpeedSquared = desiredVelocity.sqrMagnitude;
+
+            if (blockedX && !Mathf.Approximately(desiredVelocity.y, 0f))
+            {
+                float parallelSpeed = Mathf.Sqrt(Mathf.Max(
+                    0f,
+                    desiredSpeedSquared - clampedVelocity.x * clampedVelocity.x));
+                clampedVelocity.y = Mathf.Sign(desiredVelocity.y) * parallelSpeed;
+            }
+            else if (blockedY && !Mathf.Approximately(desiredVelocity.x, 0f))
+            {
+                float parallelSpeed = Mathf.Sqrt(Mathf.Max(
+                    0f,
+                    desiredSpeedSquared - clampedVelocity.y * clampedVelocity.y));
+                clampedVelocity.x = Mathf.Sign(desiredVelocity.x) * parallelSpeed;
+            }
+
+            return clampedVelocity;
         }
 
         private void OnDisable()
