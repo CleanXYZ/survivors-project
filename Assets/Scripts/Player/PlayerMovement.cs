@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Survivors.World;
 
 namespace Survivors.Player
 {
@@ -14,7 +15,11 @@ namespace Survivors.Player
         [SerializeField] private string actionMapName = "Player";
         [SerializeField] private string moveActionName = "Move";
 
+        [Header("Map Boundary")]
+        [SerializeField] private MapBounds2D mapBounds;
+
         private Rigidbody2D body;
+        private Collider2D playerCollider;
         private InputAction moveAction;
         private Vector2 moveInput;
         private bool enabledActionHere;
@@ -28,6 +33,7 @@ namespace Survivors.Player
         private void Awake()
         {
             body = GetComponent<Rigidbody2D>();
+            playerCollider = GetComponent<Collider2D>();
             body.gravityScale = 0f;
             body.freezeRotation = true;
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
@@ -51,7 +57,19 @@ namespace Survivors.Player
 
         private void FixedUpdate()
         {
-            body.linearVelocity = moveInput * moveSpeed;
+            Vector2 desiredVelocity = moveInput * moveSpeed;
+
+            if (mapBounds == null)
+            {
+                body.linearVelocity = desiredVelocity;
+                return;
+            }
+
+            Vector2 padding = playerCollider != null ? playerCollider.bounds.extents : Vector2.zero;
+            Vector2 nextPosition = body.position + desiredVelocity * Time.fixedDeltaTime;
+            Vector2 clampedPosition = mapBounds.ClampPoint(nextPosition, padding);
+
+            body.linearVelocity = (clampedPosition - body.position) / Time.fixedDeltaTime;
         }
 
         private void OnDisable()
