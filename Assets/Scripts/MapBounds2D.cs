@@ -164,6 +164,7 @@ namespace Survivors.World
 
             BoxCollider2D collider = boundary.AddComponent<BoxCollider2D>();
             collider.size = size;
+            boundary.AddComponent<MapBoundary2D>();
         }
 
         private void CreateLine(

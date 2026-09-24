@@ -23,6 +23,12 @@ namespace Survivors.Enemies
         private Collider2D enemyCollider;
         private float nextAttackTime;
 
+        public void Initialize(PlayerHealth targetPlayer, MapBounds2D worldBounds)
+        {
+            player = targetPlayer;
+            mapBounds = worldBounds;
+        }
+
         public bool IsAttackOnCooldown => Time.time < nextAttackTime;
 
         public float AttackCooldownProgress

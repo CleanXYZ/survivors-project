@@ -1,4 +1,5 @@
 using Survivors.Enemies;
+using Survivors.World;
 using UnityEngine;
 
 namespace Survivors.Player
@@ -42,11 +43,20 @@ namespace Survivors.Player
 
             EnemyHealth enemy = other.GetComponentInParent<EnemyHealth>();
 
-            if (enemy == null || !enemy.TryTakeDamage(damage))
+            if (enemy != null && enemy.TryTakeDamage(damage))
             {
+                DestroyProjectile();
                 return;
             }
 
+            if (other.GetComponent<MapBoundary2D>() != null)
+            {
+                DestroyProjectile();
+            }
+        }
+
+        private void DestroyProjectile()
+        {
             hasHit = true;
             body.linearVelocity = Vector2.zero;
             Destroy(gameObject);
