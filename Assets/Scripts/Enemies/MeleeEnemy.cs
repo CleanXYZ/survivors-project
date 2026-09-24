@@ -22,6 +22,22 @@ namespace Survivors.Enemies
         private Collider2D enemyCollider;
         private float nextAttackTime;
 
+        public bool IsAttackOnCooldown => Time.time < nextAttackTime;
+
+        public float AttackCooldownProgress
+        {
+            get
+            {
+                if (!IsAttackOnCooldown || attackCooldown <= 0f)
+                {
+                    return 1f;
+                }
+
+                float remainingCooldown = nextAttackTime - Time.time;
+                return 1f - Mathf.Clamp01(remainingCooldown / attackCooldown);
+            }
+        }
+
         private void Awake()
         {
             body = GetComponent<Rigidbody2D>();
