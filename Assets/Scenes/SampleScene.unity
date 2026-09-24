@@ -183,6 +183,7 @@ GameObject:
   - component: {fileID: 276092358}
   - component: {fileID: 276092357}
   - component: {fileID: 276092356}
+  - component: {fileID: 276092361}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -207,6 +208,18 @@ MonoBehaviour:
   actionMapName: Player
   moveActionName: Move
   mapBounds: {fileID: 100000003}
+--- !u!114 &276092361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276092355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 741491868ec14dce81c715f3181bbd9f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Survivors.Player.PlayerMovementSpeedDebugUI
 --- !u!212 &276092357
 SpriteRenderer:
   serializedVersion: 3
