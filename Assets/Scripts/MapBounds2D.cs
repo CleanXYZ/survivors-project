@@ -17,6 +17,9 @@ namespace Survivors.World
         [SerializeField] private Color gridColor = new(0.2f, 0.32f, 0.42f, 0.65f);
         [SerializeField] private Color borderColor = new(1f, 0.55f, 0.12f, 1f);
 
+        [Header("Physics Boundary")]
+        [SerializeField, Min(0.1f)] private float boundaryThickness = 1f;
+
         private Material lineMaterial;
         private Sprite floorSprite;
 
@@ -54,7 +57,7 @@ namespace Survivors.World
             gridSpacing = Mathf.Max(0.1f, gridSpacing);
             gridLineWidth = Mathf.Max(0.001f, gridLineWidth);
             borderLineWidth = Mathf.Max(0.001f, borderLineWidth);
-
+            boundaryThickness = Mathf.Max(0.1f, boundaryThickness);
         }
 
         private void RebuildVisuals()
@@ -77,6 +80,7 @@ namespace Survivors.World
             CreateFloor(root.transform);
             CreateGrid(root.transform);
             CreateBorder(root.transform);
+            CreateBoundaryColliders(root.transform);
         }
 
         private void CreateFloor(Transform parent)
@@ -119,6 +123,47 @@ namespace Survivors.World
             CreateLine(parent, new Vector2(halfSize.x, -halfSize.y), new Vector2(halfSize.x, halfSize.y), borderColor, borderLineWidth, -80);
             CreateLine(parent, new Vector2(halfSize.x, halfSize.y), new Vector2(-halfSize.x, halfSize.y), borderColor, borderLineWidth, -80);
             CreateLine(parent, new Vector2(-halfSize.x, halfSize.y), new Vector2(-halfSize.x, -halfSize.y), borderColor, borderLineWidth, -80);
+        }
+
+        private void CreateBoundaryColliders(Transform parent)
+        {
+            Vector2 halfSize = mapSize * 0.5f;
+            float halfThickness = boundaryThickness * 0.5f;
+
+            CreateBoundaryCollider(
+                parent,
+                "Bottom Boundary",
+                new Vector2(0f, -halfSize.y - halfThickness),
+                new Vector2(mapSize.x + boundaryThickness * 2f, boundaryThickness));
+            CreateBoundaryCollider(
+                parent,
+                "Top Boundary",
+                new Vector2(0f, halfSize.y + halfThickness),
+                new Vector2(mapSize.x + boundaryThickness * 2f, boundaryThickness));
+            CreateBoundaryCollider(
+                parent,
+                "Left Boundary",
+                new Vector2(-halfSize.x - halfThickness, 0f),
+                new Vector2(boundaryThickness, mapSize.y));
+            CreateBoundaryCollider(
+                parent,
+                "Right Boundary",
+                new Vector2(halfSize.x + halfThickness, 0f),
+                new Vector2(boundaryThickness, mapSize.y));
+        }
+
+        private static void CreateBoundaryCollider(
+            Transform parent,
+            string objectName,
+            Vector2 localPosition,
+            Vector2 size)
+        {
+            GameObject boundary = new(objectName);
+            boundary.transform.SetParent(parent, false);
+            boundary.transform.localPosition = localPosition;
+
+            BoxCollider2D collider = boundary.AddComponent<BoxCollider2D>();
+            collider.size = size;
         }
 
         private void CreateLine(
