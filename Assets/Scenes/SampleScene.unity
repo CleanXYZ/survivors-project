@@ -204,6 +204,8 @@ GameObject:
   - component: {fileID: 276092363}
   - component: {fileID: 276092364}
   - component: {fileID: 276092365}
+  - component: {fileID: 276092367}
+  - component: {fileID: 276092368}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -390,8 +392,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c6e2e5110e44262a9d34506e99fd0f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Survivors.Player.PlayerHealth
-  maxHealth: 41
-  invulnerabilityDuration: 0.35
+  maxHealth: 20
+  invulnerabilityDuration: 0.5
   pauseDelayAfterDeath: 2
 --- !u!114 &276092363
 MonoBehaviour:
@@ -417,21 +419,6 @@ MonoBehaviour:
   fillColor: {r: 0.2, g: 0.9, b: 0.32, a: 1}
   minorDividerColor: {r: 0.04, g: 0.07, b: 0.05, a: 0.9}
   majorDividerColor: {r: 1, g: 0.78, b: 0.16, a: 1}
---- !u!114 &276092366
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 276092355}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 65ba58d32915465f90a609f745be80b0, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::Survivors.Player.PlayerInvulnerabilityVisual
-  blinkInterval: 0.08
-  blinkAlpha: 0.2
-  targetRenderer: {fileID: 276092357}
 --- !u!114 &276092364
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -470,6 +457,56 @@ MonoBehaviour:
   fillColor: {r: 0.12, g: 0.52, b: 1, a: 1}
   levelTextColor: {r: 1, g: 1, b: 1, a: 1}
   levelFontSize: 18
+--- !u!114 &276092366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276092355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65ba58d32915465f90a609f745be80b0, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Survivors.Player.PlayerInvulnerabilityVisual
+  blinkInterval: 0.08
+  blinkAlpha: 0.2
+  targetRenderer: {fileID: 276092357}
+--- !u!114 &276092367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276092355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea2352b645da4fb6b9739208f9fe99cb, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Survivors.Player.PlayerBowAttack
+  damage: 1
+  attackCooldown: 0.75
+  arrowSpeed: 12
+  arrowLifetime: 4
+  launchOffset: 0.55
+  arrowScale: {x: 0.7, y: 0.16}
+  arrowColor: {r: 0.75, g: 0.48, b: 0.18, a: 1}
+  arrowSprite: {fileID: 0}
+--- !u!114 &276092368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276092355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ae936032ec94e8bb9e12f0e20c4ded8, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Survivors.Player.PlayerBowCooldownVisual
+  cooldownLightenAmount: 0.65
+  radialFillScale: 1
+  targetRenderer: {fileID: 276092357}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -798,6 +835,7 @@ GameObject:
   - component: {fileID: 900000005}
   - component: {fileID: 900000006}
   - component: {fileID: 900000007}
+  - component: {fileID: 900000008}
   m_Layer: 0
   m_Name: Melee Enemy A
   m_TagString: Untagged
@@ -973,8 +1011,21 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Survivors.Enemies.MeleeEnemyCooldownVisual
   cooldownLightenAmount: 0.65
-  radialFillScale: 1
+  radialFillScale: 5
   targetRenderer: {fileID: 900000003}
+--- !u!114 &900000008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7778110db30f4c36b932051814fd9c6d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Survivors.Enemies.EnemyHealth
+  maxHealth: 3
 --- !u!1 &900000011
 GameObject:
   m_ObjectHideFlags: 0
@@ -989,6 +1040,7 @@ GameObject:
   - component: {fileID: 900000015}
   - component: {fileID: 900000016}
   - component: {fileID: 900000017}
+  - component: {fileID: 900000018}
   m_Layer: 0
   m_Name: Melee Enemy B
   m_TagString: Untagged
@@ -1163,9 +1215,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e22ab0038a74ef5b6a22dc9a74ea030, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Survivors.Enemies.MeleeEnemyCooldownVisual
-  cooldownLightenAmount: 0.65
-  radialFillScale: 1
+  cooldownLightenAmount: 0.6
+  radialFillScale: 5
   targetRenderer: {fileID: 900000013}
+--- !u!114 &900000018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7778110db30f4c36b932051814fd9c6d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Survivors.Enemies.EnemyHealth
+  maxHealth: 3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

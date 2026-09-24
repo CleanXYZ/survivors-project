@@ -1,11 +1,12 @@
+using Survivors.Combat;
 using Survivors.Player;
 using Survivors.World;
 using UnityEngine;
 
 namespace Survivors.Enemies
 {
-    [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
-    public sealed class MeleeEnemy : MonoBehaviour
+    [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D), typeof(EnemyHealth))]
+    public sealed class MeleeEnemy : MonoBehaviour, IAttackCooldownSource
     {
         [Header("Target")]
         [SerializeField] private PlayerHealth player;
