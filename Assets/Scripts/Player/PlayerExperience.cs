@@ -3,6 +3,12 @@ using UnityEngine;
 
 namespace Survivors.Player
 {
+    public enum PlayerExperienceState
+    {
+        Normal,
+        LevelUpPending
+    }
+
     [RequireComponent(typeof(PlayerHealth))]
     public sealed class PlayerExperience : MonoBehaviour
     {
@@ -18,26 +24,37 @@ namespace Survivors.Player
         [SerializeField, Min(0f)] private float pickupRadius = 3f;
 
         private PlayerHealth health;
+        private float timeScaleBeforeLevelUp = 1f;
+        private bool pausedForLevelUp;
 
         public event Action<int, int, int> ExperienceChanged;
         public event Action<int> LeveledUp;
+        public event Action<PlayerExperienceState> StateChanged;
 
         public int Level { get; private set; }
         public int CurrentExperience { get; private set; }
         public int ExperienceToNextLevel => CalculateExperienceRequirement(Level);
         public float PickupRadius => pickupRadius;
-        public bool CanGainExperience => !health.IsDead;
+        public PlayerExperienceState State { get; private set; }
+        public bool IsLevelUpPending => State == PlayerExperienceState.LevelUpPending;
+        public bool CanGainExperience => !health.IsDead && State == PlayerExperienceState.Normal;
 
         private void Awake()
         {
             health = GetComponent<PlayerHealth>();
             Level = startingLevel;
-            CurrentExperience = 0;
-            ApplyExperience(startingExperience);
+            CurrentExperience = startingExperience;
+            State = PlayerExperienceState.Normal;
+        }
+
+        private void OnEnable()
+        {
+            health.Died += HandlePlayerDeath;
         }
 
         private void Start()
         {
+            TryBeginLevelUp();
             NotifyChanged();
         }
 
@@ -53,21 +70,97 @@ namespace Survivors.Player
                 return false;
             }
 
-            ApplyExperience(amount);
+            CurrentExperience = (int)Math.Min(
+                (long)CurrentExperience + amount,
+                int.MaxValue);
+            TryBeginLevelUp();
             NotifyChanged();
             return true;
         }
 
-        private void ApplyExperience(int amount)
+        public bool CompleteLevelUp()
         {
-            CurrentExperience += Mathf.Max(0, amount);
-
-            while (CurrentExperience >= ExperienceToNextLevel)
+            if (!IsLevelUpPending)
             {
-                CurrentExperience -= ExperienceToNextLevel;
-                Level++;
-                LeveledUp?.Invoke(Level);
+                return false;
             }
+
+            if (health.IsDead)
+            {
+                HandlePlayerDeath();
+                return false;
+            }
+
+            if (TryBeginLevelUp())
+            {
+                NotifyChanged();
+                return true;
+            }
+
+            SetState(PlayerExperienceState.Normal);
+            ResumeAfterLevelUp();
+            return true;
+        }
+
+        private bool TryBeginLevelUp()
+        {
+            int requiredExperience = ExperienceToNextLevel;
+
+            if (CurrentExperience < requiredExperience || health.IsDead)
+            {
+                return false;
+            }
+
+            CurrentExperience -= requiredExperience;
+            Level++;
+            PauseForLevelUp();
+            SetState(PlayerExperienceState.LevelUpPending);
+            LeveledUp?.Invoke(Level);
+            return true;
+        }
+
+        private void PauseForLevelUp()
+        {
+            if (pausedForLevelUp)
+            {
+                return;
+            }
+
+            timeScaleBeforeLevelUp = Time.timeScale;
+            pausedForLevelUp = true;
+            Time.timeScale = 0f;
+        }
+
+        private void ResumeAfterLevelUp()
+        {
+            if (!pausedForLevelUp)
+            {
+                return;
+            }
+
+            Time.timeScale = timeScaleBeforeLevelUp;
+            pausedForLevelUp = false;
+        }
+
+        private void HandlePlayerDeath()
+        {
+            if (IsLevelUpPending)
+            {
+                SetState(PlayerExperienceState.Normal);
+            }
+
+            ResumeAfterLevelUp();
+        }
+
+        private void SetState(PlayerExperienceState newState)
+        {
+            if (State == newState)
+            {
+                return;
+            }
+
+            State = newState;
+            StateChanged?.Invoke(State);
         }
 
         private int CalculateExperienceRequirement(int level)
@@ -80,6 +173,21 @@ namespace Survivors.Player
         private void NotifyChanged()
         {
             ExperienceChanged?.Invoke(Level, CurrentExperience, ExperienceToNextLevel);
+        }
+
+        private void OnDisable()
+        {
+            if (health != null)
+            {
+                health.Died -= HandlePlayerDeath;
+            }
+
+            if (IsLevelUpPending)
+            {
+                SetState(PlayerExperienceState.Normal);
+            }
+
+            ResumeAfterLevelUp();
         }
 
         private void OnValidate()
