@@ -433,7 +433,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Survivors.Player.PlayerExperience
   startingLevel: 1
   startingExperience: 0
-  experienceToNextLevel: 10
+  baseExperienceRequirement: 10
+  experienceGrowthPerLevel: 2
+  pickupRadius: 3
 --- !u!114 &276092365
 MonoBehaviour:
   m_ObjectHideFlags: 0

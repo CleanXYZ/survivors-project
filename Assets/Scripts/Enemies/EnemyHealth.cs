@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Survivors.Experience;
+using Survivors.Player;
 using UnityEngine;
 
 namespace Survivors.Enemies
@@ -11,7 +13,12 @@ namespace Survivors.Enemies
 
         [SerializeField, Min(1)] private int maxHealth = 3;
 
+        [Header("Experience Drop")]
+        [SerializeField] private ExperiencePickup experiencePickupPrefab;
+        [SerializeField, Min(1)] private int experienceReward = 1;
+
         private Collider2D targetCollider;
+        private PlayerExperience experienceTarget;
 
         public event Action Died;
 
@@ -57,6 +64,11 @@ namespace Survivors.Enemies
             return true;
         }
 
+        public void ConfigureExperienceTarget(PlayerExperience target)
+        {
+            experienceTarget = target;
+        }
+
         public static EnemyHealth FindNearest(Vector2 position)
         {
             EnemyHealth nearest = null;
@@ -90,8 +102,35 @@ namespace Survivors.Enemies
 
             IsAlive = false;
             ActiveEnemies.Remove(this);
+            DropExperience();
             Died?.Invoke();
             Destroy(gameObject);
+        }
+
+        private void DropExperience()
+        {
+            if (experiencePickupPrefab == null)
+            {
+                Debug.LogError($"{name} has no experience pickup prefab assigned.", this);
+                return;
+            }
+
+            if (experienceTarget == null)
+            {
+                experienceTarget = FindAnyObjectByType<PlayerExperience>();
+            }
+
+            if (experienceTarget == null)
+            {
+                Debug.LogError($"{name} could not find a player experience target.", this);
+                return;
+            }
+
+            ExperiencePickup.Spawn(
+                experiencePickupPrefab,
+                transform.position,
+                experienceTarget,
+                experienceReward);
         }
 
         private void OnDisable()
@@ -102,6 +141,7 @@ namespace Survivors.Enemies
         private void OnValidate()
         {
             maxHealth = Mathf.Max(1, maxHealth);
+            experienceReward = Mathf.Max(1, experienceReward);
 
             if (Application.isPlaying && IsAlive)
             {

@@ -205,3 +205,5 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Survivors.Enemies.EnemyHealth
   maxHealth: 3
+  experiencePickupPrefab: {fileID: 920000004, guid: b29d756d6c2b46b4900352acd9416b62, type: 3}
+  experienceReward: 1

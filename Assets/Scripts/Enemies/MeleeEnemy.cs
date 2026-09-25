@@ -21,12 +21,14 @@ namespace Survivors.Enemies
 
         private Rigidbody2D body;
         private Collider2D enemyCollider;
+        private EnemyHealth health;
         private float nextAttackTime;
 
         public void Initialize(PlayerHealth targetPlayer, MapBounds2D worldBounds)
         {
             player = targetPlayer;
             mapBounds = worldBounds;
+            health.ConfigureExperienceTarget(targetPlayer.GetComponent<PlayerExperience>());
         }
 
         public bool IsAttackOnCooldown => Time.time < nextAttackTime;
@@ -49,6 +51,7 @@ namespace Survivors.Enemies
         {
             body = GetComponent<Rigidbody2D>();
             enemyCollider = GetComponent<Collider2D>();
+            health = GetComponent<EnemyHealth>();
             body.gravityScale = 0f;
             body.freezeRotation = true;
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
