@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Survivors.Growth;
 using Survivors.Player;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -11,21 +13,6 @@ namespace Survivors.UI
     [RequireComponent(typeof(PlayerExperience))]
     public sealed class LevelUpSelectionUI : MonoBehaviour
     {
-        [Serializable]
-        private struct TemporaryGrowthOption
-        {
-            public string id;
-            public string displayName;
-            [TextArea] public string description;
-
-            public TemporaryGrowthOption(string id, string displayName, string description)
-            {
-                this.id = id;
-                this.displayName = displayName;
-                this.description = description;
-            }
-        }
-
         private const string RuntimeRootName = "__LevelUpSelectionUI";
         private const int MaximumCardCount = 3;
 
@@ -33,13 +20,9 @@ namespace Survivors.UI
         [SerializeField] private GameObject uiRoot;
         [SerializeField] private GrowthOptionCard[] cards = new GrowthOptionCard[MaximumCardCount];
 
-        [Header("Temporary Options")]
-        [SerializeField] private TemporaryGrowthOption[] temporaryOptions =
-        {
-            new("attack_power", "공격력 증가", "모든 공격의 피해량이 증가합니다. (임시 선택지)"),
-            new("move_speed", "이동속도 증가", "플레이어의 이동속도가 증가합니다. (임시 선택지)"),
-            new("attack_speed", "공격속도 증가", "자동 공격의 공격속도가 증가합니다. (임시 선택지)")
-        };
+        [Header("Growth Data")]
+        [SerializeField] private GrowthContentLibrary contentLibrary;
+        [SerializeField] private GrowthRuntimeState growthState;
 
         [Header("Runtime Fallback Layout")]
         [SerializeField] private Color overlayColor = new(0.015f, 0.025f, 0.05f, 0.88f);
@@ -47,12 +30,16 @@ namespace Survivors.UI
         [SerializeField] private Color cardHighlightColor = new(0.13f, 0.32f, 0.55f, 1f);
 
         private PlayerExperience experience;
+        private readonly List<GrowthOption> currentOptions = new(MaximumCardCount);
         private bool acceptingSelection;
+
+        public event Action<GrowthOption> GrowthOptionSelected;
 
         private void Awake()
         {
             experience = GetComponent<PlayerExperience>();
-            EnsureTemporaryOptions();
+            contentLibrary = EnsureComponent(contentLibrary);
+            growthState = EnsureComponent(growthState);
 
             if (!HasConfiguredCards())
             {
@@ -123,16 +110,25 @@ namespace Survivors.UI
         {
             if (uiRoot == null)
             {
+                Debug.LogError("Level-up selection UI root is missing.", this);
+                CompleteWithoutOption();
                 return;
             }
 
             EnsureEventSystem();
 
-            int visibleCardCount = Mathf.Min(
-                MaximumCardCount,
-                Mathf.Min(cards.Length, temporaryOptions.Length));
+            List<GrowthOption> pool = GrowthCandidateGenerator.BuildEligiblePool(
+                contentLibrary,
+                growthState);
+            currentOptions.Clear();
+            currentOptions.AddRange(GrowthCandidateGenerator.DrawWithoutReplacement(
+                pool,
+                MaximumCardCount));
 
-            for (int i = 0; i < cards.Length; i++)
+            int cardCount = cards?.Length ?? 0;
+            int visibleCardCount = Mathf.Min(cardCount, currentOptions.Count);
+
+            for (int i = 0; i < cardCount; i++)
             {
                 GrowthOptionCard card = cards[i];
                 if (card == null)
@@ -145,9 +141,18 @@ namespace Survivors.UI
 
                 if (isVisible)
                 {
-                    TemporaryGrowthOption option = temporaryOptions[i];
-                    card.Bind(i, option.displayName, option.description, TrySelect);
+                    GrowthOption option = currentOptions[i];
+                    card.Bind(i, option.DisplayName, option.Description, TrySelect);
                 }
+            }
+
+            if (visibleCardCount == 0)
+            {
+                Debug.LogWarning(
+                    "No valid growth options are available. Completing this level-up without a reward.",
+                    this);
+                CompleteWithoutOption();
+                return;
             }
 
             acceptingSelection = visibleCardCount > 0;
@@ -158,7 +163,7 @@ namespace Survivors.UI
         {
             if (!acceptingSelection
                 || optionIndex < 0
-                || optionIndex >= temporaryOptions.Length
+                || optionIndex >= currentOptions.Count
                 || optionIndex >= cards.Length
                 || cards[optionIndex] == null
                 || !cards[optionIndex].gameObject.activeInHierarchy)
@@ -169,11 +174,12 @@ namespace Survivors.UI
             acceptingSelection = false;
             SetCardsInteractable(false);
 
-            TemporaryGrowthOption selectedOption = temporaryOptions[optionIndex];
+            GrowthOption selectedOption = currentOptions[optionIndex];
             Debug.Log(
                 $"Level {experience.Level} growth selected: "
-                + $"{selectedOption.displayName} ({selectedOption.id})",
+                + $"[{selectedOption.Category}] {selectedOption.DisplayName} ({selectedOption.Id})",
                 this);
+            GrowthOptionSelected?.Invoke(selectedOption);
 
             bool completed = experience.CompleteLevelUp();
 
@@ -217,13 +223,12 @@ namespace Survivors.UI
                 return false;
             }
 
-            int expectedCount = Mathf.Min(MaximumCardCount, temporaryOptions.Length);
-            if (cards.Length < expectedCount)
+            if (cards.Length < MaximumCardCount)
             {
                 return false;
             }
 
-            for (int i = 0; i < expectedCount; i++)
+            for (int i = 0; i < MaximumCardCount; i++)
             {
                 if (cards[i] == null)
                 {
@@ -234,28 +239,26 @@ namespace Survivors.UI
             return true;
         }
 
-        private void EnsureTemporaryOptions()
+        private T EnsureComponent<T>(T configuredComponent) where T : Component
         {
-            if (temporaryOptions != null && temporaryOptions.Length > 0)
+            if (configuredComponent != null)
             {
-                return;
+                return configuredComponent;
             }
 
-            temporaryOptions = new[]
+            T component = GetComponent<T>();
+            return component != null ? component : gameObject.AddComponent<T>();
+        }
+
+        private void CompleteWithoutOption()
+        {
+            acceptingSelection = false;
+            if (uiRoot != null)
             {
-                new TemporaryGrowthOption(
-                    "attack_power",
-                    "공격력 증가",
-                    "모든 공격의 피해량이 증가합니다. (임시 선택지)"),
-                new TemporaryGrowthOption(
-                    "move_speed",
-                    "이동속도 증가",
-                    "플레이어의 이동속도가 증가합니다. (임시 선택지)"),
-                new TemporaryGrowthOption(
-                    "attack_speed",
-                    "공격속도 증가",
-                    "자동 공격의 공격속도가 증가합니다. (임시 선택지)")
-            };
+                uiRoot.SetActive(false);
+            }
+
+            experience.CompleteLevelUp();
         }
 
         private void BuildRuntimeUi()

@@ -208,6 +208,8 @@ GameObject:
   - component: {fileID: 276092368}
   - component: {fileID: 276092369}
   - component: {fileID: 276092370}
+  - component: {fileID: 276092371}
+  - component: {fileID: 276092372}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -490,19 +492,42 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Survivors.UI.LevelUpSelectionUI
   uiRoot: {fileID: 0}
   cards: []
-  temporaryOptions:
-  - id: attack_power
-    displayName: 공격력 증가
-    description: 모든 공격의 피해량이 증가합니다. (임시 선택지)
-  - id: move_speed
-    displayName: 이동속도 증가
-    description: 플레이어의 이동속도가 증가합니다. (임시 선택지)
-  - id: attack_speed
-    displayName: 공격속도 증가
-    description: 자동 공격의 공격속도가 증가합니다. (임시 선택지)
+  contentLibrary: {fileID: 276092371}
+  growthState: {fileID: 276092372}
   overlayColor: {r: 0.015, g: 0.025, b: 0.05, a: 0.88}
   cardColor: {r: 0.08, g: 0.14, b: 0.24, a: 1}
   cardHighlightColor: {r: 0.13, g: 0.32, b: 0.55, a: 1}
+--- !u!114 &276092371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276092355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6492d01130444a96a697da777805c640, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Survivors.Growth.GrowthContentLibrary
+--- !u!114 &276092372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276092355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2867e8fbd36d44a1ac0a83ef7187d701, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Survivors.Growth.GrowthRuntimeState
+  maximumOwnedWeapons: 4
+  maximumTraitsPerWeapon: 4
+  maximumPassiveLevel: 5
+  ownedWeapons:
+  - weaponId: bow
+    selectedTraitIds: []
+  ownedPassives: []
 --- !u!114 &276092366
 MonoBehaviour:
   m_ObjectHideFlags: 0
