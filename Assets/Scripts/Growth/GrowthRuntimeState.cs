@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Survivors.Growth
@@ -54,6 +55,17 @@ namespace Survivors.Growth
         public int MaximumTraitsPerWeapon => maximumTraitsPerWeapon;
         public int MaximumPassiveLevel => maximumPassiveLevel;
         public int OwnedWeaponCount => ownedWeapons?.Length ?? 0;
+        public IReadOnlyList<WeaponGrowthState> OwnedWeapons =>
+            ownedWeapons ?? Array.Empty<WeaponGrowthState>();
+        public IReadOnlyList<PassiveGrowthState> OwnedPassives =>
+            ownedPassives ?? Array.Empty<PassiveGrowthState>();
+
+        public event Action Changed;
+
+        public void NotifyChanged()
+        {
+            Changed?.Invoke();
+        }
 
         public bool IsWeaponOwned(string weaponId)
         {
@@ -142,6 +154,7 @@ namespace Survivors.Growth
             maximumOwnedWeapons = Mathf.Max(1, maximumOwnedWeapons);
             maximumTraitsPerWeapon = Mathf.Max(1, maximumTraitsPerWeapon);
             maximumPassiveLevel = Mathf.Max(1, maximumPassiveLevel);
+            Changed?.Invoke();
         }
     }
 }

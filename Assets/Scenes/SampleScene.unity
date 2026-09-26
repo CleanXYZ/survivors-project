@@ -210,6 +210,7 @@ GameObject:
   - component: {fileID: 276092370}
   - component: {fileID: 276092371}
   - component: {fileID: 276092372}
+  - component: {fileID: 276092373}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -528,6 +529,33 @@ MonoBehaviour:
   - weaponId: bow
     selectedTraitIds: []
   ownedPassives: []
+--- !u!114 &276092373
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276092355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 908dab14006346ad80352e4be55d85a5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Survivors.UI.OwnedStatusUI
+  contentLibrary: {fileID: 276092371}
+  growthState: {fileID: 276092372}
+  uiRoot: {fileID: 0}
+  weaponContainer: {fileID: 0}
+  passiveContainer: {fileID: 0}
+  weaponEntryPrefab: {fileID: 0}
+  passiveEntryPrefab: {fileID: 0}
+  placeholderIcon: {fileID: 0}
+  panelWidth: 300
+  iconSize: 38
+  entryHeight: 48
+  topLeftOffset: {x: 24, y: -90}
+  panelColor: {r: 0.025, g: 0.045, b: 0.08, a: 0.82}
+  entryColor: {r: 0.08, g: 0.12, b: 0.19, a: 0.86}
+  missingIconColor: {r: 0.25, g: 0.3, b: 0.38, a: 1}
 --- !u!114 &276092366
 MonoBehaviour:
   m_ObjectHideFlags: 0

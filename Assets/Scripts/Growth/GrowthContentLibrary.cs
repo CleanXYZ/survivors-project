@@ -28,11 +28,13 @@ namespace Survivors.Growth
         [SerializeField] private string id;
         [SerializeField] private string displayName;
         [SerializeField, TextArea] private string description;
+        [SerializeField] private Sprite icon;
         [SerializeField] private WeaponTraitDefinition[] traits;
 
         public string Id => id;
         public string DisplayName => displayName;
         public string Description => description;
+        public Sprite Icon => icon;
         public WeaponTraitDefinition[] Traits => traits ?? Array.Empty<WeaponTraitDefinition>();
 
         public WeaponDefinition(
@@ -54,10 +56,12 @@ namespace Survivors.Growth
         [SerializeField] private string id;
         [SerializeField] private string displayName;
         [SerializeField, TextArea] private string description;
+        [SerializeField] private Sprite icon;
 
         public string Id => id;
         public string DisplayName => displayName;
         public string Description => description;
+        public Sprite Icon => icon;
 
         public PassiveDefinition(string id, string displayName, string description)
         {
@@ -75,6 +79,34 @@ namespace Survivors.Growth
 
         public WeaponDefinition[] Weapons => weapons ?? Array.Empty<WeaponDefinition>();
         public PassiveDefinition[] Passives => passives ?? Array.Empty<PassiveDefinition>();
+
+        public WeaponDefinition FindWeapon(string weaponId)
+        {
+            foreach (WeaponDefinition weapon in Weapons)
+            {
+                if (weapon != null && string.Equals(
+                    weapon.Id, weaponId, StringComparison.Ordinal))
+                {
+                    return weapon;
+                }
+            }
+
+            return null;
+        }
+
+        public PassiveDefinition FindPassive(string passiveId)
+        {
+            foreach (PassiveDefinition passive in Passives)
+            {
+                if (passive != null && string.Equals(
+                    passive.Id, passiveId, StringComparison.Ordinal))
+                {
+                    return passive;
+                }
+            }
+
+            return null;
+        }
 
         private void Awake()
         {
