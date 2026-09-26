@@ -207,6 +207,7 @@ GameObject:
   - component: {fileID: 276092367}
   - component: {fileID: 276092368}
   - component: {fileID: 276092369}
+  - component: {fileID: 276092370}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -475,6 +476,33 @@ MonoBehaviour:
   rangeColor: {r: 0.15, g: 0.65, b: 1, a: 0.12}
   circleSegments: 64
   sortingOrder: -70
+--- !u!114 &276092370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276092355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43657661549a4ecb938a8ef6248d393b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Survivors.UI.LevelUpSelectionUI
+  uiRoot: {fileID: 0}
+  cards: []
+  temporaryOptions:
+  - id: attack_power
+    displayName: 공격력 증가
+    description: 모든 공격의 피해량이 증가합니다. (임시 선택지)
+  - id: move_speed
+    displayName: 이동속도 증가
+    description: 플레이어의 이동속도가 증가합니다. (임시 선택지)
+  - id: attack_speed
+    displayName: 공격속도 증가
+    description: 자동 공격의 공격속도가 증가합니다. (임시 선택지)
+  overlayColor: {r: 0.015, g: 0.025, b: 0.05, a: 0.88}
+  cardColor: {r: 0.08, g: 0.14, b: 0.24, a: 1}
+  cardHighlightColor: {r: 0.13, g: 0.32, b: 0.55, a: 1}
 --- !u!114 &276092366
 MonoBehaviour:
   m_ObjectHideFlags: 0
