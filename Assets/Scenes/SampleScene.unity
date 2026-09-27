@@ -525,6 +525,7 @@ MonoBehaviour:
   maximumOwnedWeapons: 4
   maximumTraitsPerWeapon: 4
   maximumPassiveLevel: 5
+  initialRerollCount: 3
   ownedWeapons:
   - weaponId: bow
     selectedTraitIds: []

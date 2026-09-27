@@ -37,6 +37,20 @@ namespace Survivors.Growth
         public Sprite Icon => icon;
         public WeaponTraitDefinition[] Traits => traits ?? Array.Empty<WeaponTraitDefinition>();
 
+        public WeaponTraitDefinition FindTrait(string traitId)
+        {
+            foreach (WeaponTraitDefinition trait in Traits)
+            {
+                if (trait != null && string.Equals(
+                    trait.Id, traitId, StringComparison.Ordinal))
+                {
+                    return trait;
+                }
+            }
+
+            return null;
+        }
+
         public WeaponDefinition(
             string id,
             string displayName,

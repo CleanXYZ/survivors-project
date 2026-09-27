@@ -19,6 +19,7 @@ namespace Survivors.UI
         [Header("UI References")]
         [SerializeField] private GameObject uiRoot;
         [SerializeField] private GrowthOptionCard[] cards = new GrowthOptionCard[MaximumCardCount];
+        [SerializeField] private Text remainingRerollText;
 
         [Header("Growth Data")]
         [SerializeField] private GrowthContentLibrary contentLibrary;
@@ -56,6 +57,7 @@ namespace Survivors.UI
         {
             experience.LeveledUp += HandleLeveledUp;
             experience.StateChanged += HandleStateChanged;
+            growthState.RerollCountChanged += HandleRerollCountChanged;
         }
 
         private void Start()
@@ -79,15 +81,40 @@ namespace Survivors.UI
                 return;
             }
 
-            if (keyboard.digit1Key.wasPressedThisFrame || keyboard.numpad1Key.wasPressedThisFrame)
+            bool rerollModifierHeld = keyboard.backquoteKey.isPressed;
+            if (rerollModifierHeld)
+            {
+                if (keyboard.digit1Key.wasPressedThisFrame
+                    || keyboard.numpad1Key.wasPressedThisFrame)
+                {
+                    TryReroll(0);
+                }
+                else if (keyboard.digit2Key.wasPressedThisFrame
+                    || keyboard.numpad2Key.wasPressedThisFrame)
+                {
+                    TryReroll(1);
+                }
+                else if (keyboard.digit3Key.wasPressedThisFrame
+                    || keyboard.numpad3Key.wasPressedThisFrame)
+                {
+                    TryReroll(2);
+                }
+
+                return;
+            }
+
+            if (keyboard.digit1Key.wasPressedThisFrame
+                || keyboard.numpad1Key.wasPressedThisFrame)
             {
                 TrySelect(0);
             }
-            else if (keyboard.digit2Key.wasPressedThisFrame || keyboard.numpad2Key.wasPressedThisFrame)
+            else if (keyboard.digit2Key.wasPressedThisFrame
+                || keyboard.numpad2Key.wasPressedThisFrame)
             {
                 TrySelect(1);
             }
-            else if (keyboard.digit3Key.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame)
+            else if (keyboard.digit3Key.wasPressedThisFrame
+                || keyboard.numpad3Key.wasPressedThisFrame)
             {
                 TrySelect(2);
             }
@@ -104,6 +131,11 @@ namespace Survivors.UI
             {
                 Hide();
             }
+        }
+
+        private void HandleRerollCountChanged(int _)
+        {
+            RefreshRerollState();
         }
 
         private void Show()
@@ -142,7 +174,13 @@ namespace Survivors.UI
                 if (isVisible)
                 {
                     GrowthOption option = currentOptions[i];
-                    card.Bind(i, option.DisplayName, option.Description, TrySelect);
+                    card.Bind(
+                        i,
+                        option.DisplayName,
+                        option.Description,
+                        TrySelect,
+                        TryReroll,
+                        growthState.RemainingRerollCount > 0);
                 }
             }
 
@@ -157,6 +195,69 @@ namespace Survivors.UI
 
             acceptingSelection = visibleCardCount > 0;
             uiRoot.SetActive(true);
+            RefreshRerollState();
+        }
+
+        private void TryReroll(int optionIndex)
+        {
+            if (!acceptingSelection
+                || growthState.RemainingRerollCount <= 0
+                || optionIndex < 0
+                || optionIndex >= currentOptions.Count
+                || optionIndex >= cards.Length
+                || cards[optionIndex] == null
+                || !cards[optionIndex].gameObject.activeInHierarchy)
+            {
+                return;
+            }
+
+            HashSet<string> excludedIds = new(StringComparer.Ordinal);
+            foreach (GrowthOption option in currentOptions)
+            {
+                if (option != null && !string.IsNullOrWhiteSpace(option.Id))
+                {
+                    excludedIds.Add(option.Id);
+                }
+            }
+
+            List<GrowthOption> eligiblePool = GrowthCandidateGenerator.BuildEligiblePool(
+                contentLibrary,
+                growthState);
+            eligiblePool.RemoveAll(option =>
+                option == null
+                || string.IsNullOrWhiteSpace(option.Id)
+                || excludedIds.Contains(option.Id));
+
+            List<GrowthOption> replacements =
+                GrowthCandidateGenerator.DrawWithoutReplacement(eligiblePool, 1);
+            if (replacements.Count == 0)
+            {
+                Debug.Log(
+                    $"No reroll replacement is available for growth card {optionIndex + 1}.",
+                    this);
+                return;
+            }
+
+            GrowthOption replacement = replacements[0];
+            if (!growthState.TryConsumeReroll())
+            {
+                return;
+            }
+
+            currentOptions[optionIndex] = replacement;
+            cards[optionIndex].Bind(
+                optionIndex,
+                replacement.DisplayName,
+                replacement.Description,
+                TrySelect,
+                TryReroll,
+                growthState.RemainingRerollCount > 0);
+
+            Debug.Log(
+                $"Growth card {optionIndex + 1} rerolled to "
+                + $"[{replacement.Category}] {replacement.DisplayName} ({replacement.Id}). "
+                + $"Remaining rerolls: {growthState.RemainingRerollCount}",
+                this);
         }
 
         private void TrySelect(int optionIndex)
@@ -179,6 +280,14 @@ namespace Survivors.UI
                 $"Level {experience.Level} growth selected: "
                 + $"[{selectedOption.Category}] {selectedOption.DisplayName} ({selectedOption.Id})",
                 this);
+
+            if (!growthState.TryRegister(selectedOption))
+            {
+                Debug.LogWarning(
+                    $"Selected growth option could not be registered: {selectedOption.Id}",
+                    this);
+            }
+
             GrowthOptionSelected?.Invoke(selectedOption);
 
             bool completed = experience.CompleteLevelUp();
@@ -211,7 +320,33 @@ namespace Survivors.UI
             {
                 if (card != null)
                 {
-                    card.SetInteractable(interactable);
+                    card.SetInteractable(
+                        interactable,
+                        interactable && growthState.RemainingRerollCount > 0);
+                }
+            }
+        }
+
+        private void RefreshRerollState()
+        {
+            if (remainingRerollText != null)
+            {
+                remainingRerollText.text = $"리롤 {growthState.RemainingRerollCount}";
+            }
+
+            if (!acceptingSelection || cards == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < cards.Length; i++)
+            {
+                GrowthOptionCard card = cards[i];
+                if (card != null && card.gameObject.activeInHierarchy)
+                {
+                    card.SetInteractable(
+                        true,
+                        growthState.RemainingRerollCount > 0);
                 }
             }
         }
@@ -294,6 +429,19 @@ namespace Survivors.UI
             titleRect.anchoredPosition = new Vector2(0f, 250f);
             titleRect.sizeDelta = new Vector2(800f, 80f);
 
+            remainingRerollText = CreateText(
+                overlay,
+                "Remaining Rerolls",
+                string.Empty,
+                26,
+                FontStyle.Bold);
+            RectTransform rerollCountRect = remainingRerollText.rectTransform;
+            rerollCountRect.anchorMin = new Vector2(0.5f, 0.5f);
+            rerollCountRect.anchorMax = new Vector2(0.5f, 0.5f);
+            rerollCountRect.pivot = new Vector2(0.5f, 0.5f);
+            rerollCountRect.anchoredPosition = new Vector2(0f, 205f);
+            rerollCountRect.sizeDelta = new Vector2(400f, 48f);
+
             cards = new GrowthOptionCard[MaximumCardCount];
             const float cardWidth = 420f;
             const float cardHeight = 360f;
@@ -339,11 +487,33 @@ namespace Survivors.UI
                 new Vector2(0f, 1f), new Vector2(0f, 1f), TextAnchor.MiddleCenter);
 
             Text descriptionLabel = CreateText(cardRect, "Description", string.Empty, 22, FontStyle.Normal);
-            SetRect(descriptionLabel.rectTransform, new Vector2(32f, 34f), new Vector2(width - 64f, 190f),
+            SetRect(descriptionLabel.rectTransform, new Vector2(32f, 82f), new Vector2(width - 64f, 142f),
                 new Vector2(0f, 0f), new Vector2(0f, 0f), TextAnchor.MiddleCenter);
 
+            RectTransform rerollRect = CreateImage(
+                cardRect,
+                "Reroll Button",
+                new Color(0.16f, 0.3f, 0.48f, 1f));
+            rerollRect.anchorMin = new Vector2(0.5f, 0f);
+            rerollRect.anchorMax = new Vector2(0.5f, 0f);
+            rerollRect.pivot = new Vector2(0.5f, 0f);
+            rerollRect.anchoredPosition = new Vector2(0f, 22f);
+            rerollRect.sizeDelta = new Vector2(width - 80f, 52f);
+
+            Image rerollImage = rerollRect.GetComponent<Image>();
+            Button rerollButton = rerollRect.gameObject.AddComponent<Button>();
+            rerollButton.targetGraphic = rerollImage;
+
+            Text rerollLabel = CreateText(
+                rerollRect,
+                "Label",
+                $"` + {index + 1} 리롤",
+                21,
+                FontStyle.Bold);
+            Stretch(rerollLabel.rectTransform, Vector2.zero, Vector2.zero);
+
             GrowthOptionCard card = cardRect.gameObject.AddComponent<GrowthOptionCard>();
-            card.SetReferences(button, nameLabel, descriptionLabel);
+            card.SetReferences(button, rerollButton, nameLabel, descriptionLabel);
             return card;
         }
 
@@ -420,6 +590,11 @@ namespace Survivors.UI
             {
                 experience.LeveledUp -= HandleLeveledUp;
                 experience.StateChanged -= HandleStateChanged;
+            }
+
+            if (growthState != null)
+            {
+                growthState.RerollCountChanged -= HandleRerollCountChanged;
             }
 
             Hide();

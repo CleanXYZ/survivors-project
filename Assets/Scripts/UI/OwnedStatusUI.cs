@@ -82,12 +82,14 @@ namespace Survivors.UI
                 string displayName = definition?.DisplayName
                     ?? state?.WeaponId
                     ?? "알 수 없는 무기";
+                string traitDetails = BuildTraitDetails(state, definition);
                 weaponEntries[i].Bind(
                     definition?.Icon,
                     placeholderIcon,
                     missingIconColor,
                     displayName,
-                    null);
+                    null,
+                    traitDetails);
             }
 
             List<PassiveGrowthState> visiblePassives = new();
@@ -117,6 +119,25 @@ namespace Survivors.UI
                     definition?.DisplayName ?? state.PassiveId,
                     state.Level);
             }
+        }
+
+        private static string BuildTraitDetails(
+            WeaponGrowthState state,
+            WeaponDefinition definition)
+        {
+            if (state == null || state.SelectedTraitIds.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            List<string> traitLines = new(state.SelectedTraitIds.Length);
+            foreach (string traitId in state.SelectedTraitIds)
+            {
+                WeaponTraitDefinition trait = definition?.FindTrait(traitId);
+                traitLines.Add($"└ {trait?.DisplayName ?? traitId}");
+            }
+
+            return string.Join("\n", traitLines);
         }
 
         private void EnsureEntryCount(
@@ -220,17 +241,29 @@ namespace Survivors.UI
             LayoutElement rowLayout = row.gameObject.AddComponent<LayoutElement>();
             rowLayout.preferredHeight = entryHeight;
 
-            HorizontalLayoutGroup layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(6, 8, 5, 5);
-            layout.spacing = 8f;
-            layout.childAlignment = TextAnchor.MiddleLeft;
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = false;
+            VerticalLayoutGroup rowGroup = row.gameObject.AddComponent<VerticalLayoutGroup>();
+            rowGroup.padding = new RectOffset(6, 8, 5, 5);
+            rowGroup.spacing = 4f;
+            rowGroup.childAlignment = TextAnchor.UpperLeft;
+            rowGroup.childControlWidth = true;
+            rowGroup.childControlHeight = true;
+            rowGroup.childForceExpandWidth = true;
+            rowGroup.childForceExpandHeight = false;
+
+            GameObject header = new("Header", typeof(RectTransform), typeof(HorizontalLayoutGroup),
+                typeof(LayoutElement));
+            header.transform.SetParent(row, false);
+            HorizontalLayoutGroup headerLayout = header.GetComponent<HorizontalLayoutGroup>();
+            headerLayout.spacing = 8f;
+            headerLayout.childAlignment = TextAnchor.MiddleLeft;
+            headerLayout.childControlWidth = true;
+            headerLayout.childControlHeight = true;
+            headerLayout.childForceExpandWidth = false;
+            headerLayout.childForceExpandHeight = false;
+            header.GetComponent<LayoutElement>().preferredHeight = iconSize;
 
             GameObject iconObject = new("Icon", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
-            iconObject.transform.SetParent(row, false);
+            iconObject.transform.SetParent(header.transform, false);
             Image icon = iconObject.GetComponent<Image>();
             icon.raycastTarget = false;
             icon.preserveAspect = true;
@@ -238,18 +271,22 @@ namespace Survivors.UI
             iconLayout.preferredWidth = iconSize;
             iconLayout.preferredHeight = iconSize;
 
-            Text itemName = CreateText(row, "Name", string.Empty, 17, FontStyle.Normal);
+            Text itemName = CreateText(header.transform, "Name", string.Empty, 17, FontStyle.Normal);
             itemName.alignment = TextAnchor.MiddleLeft;
             LayoutElement nameLayout = itemName.gameObject.AddComponent<LayoutElement>();
             nameLayout.flexibleWidth = 1f;
 
-            Text level = CreateText(row, "Level", string.Empty, 16, FontStyle.Bold);
+            Text level = CreateText(header.transform, "Level", string.Empty, 16, FontStyle.Bold);
             level.alignment = TextAnchor.MiddleRight;
             LayoutElement levelLayout = level.gameObject.AddComponent<LayoutElement>();
             levelLayout.preferredWidth = 56f;
 
+            Text details = CreateText(row, "Details", string.Empty, 14, FontStyle.Normal);
+            details.alignment = TextAnchor.UpperLeft;
+            details.color = new Color(0.75f, 0.82f, 0.92f, 1f);
+
             OwnedStatusEntry entry = row.gameObject.AddComponent<OwnedStatusEntry>();
-            entry.SetReferences(icon, itemName, level);
+            entry.SetReferences(icon, itemName, level, details, rowLayout, entryHeight, 18f);
             return entry;
         }
 
