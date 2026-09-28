@@ -615,6 +615,22 @@ MonoBehaviour:
   arrowScale: {x: 0.7, y: 0.16}
   arrowColor: {r: 0.75, g: 0.48, b: 0.18, a: 1}
   arrowSprite: {fileID: 0}
+  extraShotSpreadAngle: 10
+  splitAngle: 25
+  splitDamageMultiplier: 0.6
+  splitScaleMultiplier: 0.7
+  splitSpeedMultiplier: 1
+  splitLaunchOffset: 0.08
+  markDuration: 4
+  markDamageMultiplier: 1
+  explosionRadius: 1.5
+  explosionDamageMultiplier: 0.75
+  focusedFireDamageBonus: 0.25
+  rapidFireCooldownReduction: 0.2
+  showExplosionRange: 1
+  explosionRangeVisualDuration: 0.35
+  explosionRangeVisualColor: {r: 1, g: 0.25, b: 0.05, a: 0.22}
+  explosionRangeVisualSegments: 64
 --- !u!114 &276092368
 MonoBehaviour:
   m_ObjectHideFlags: 0

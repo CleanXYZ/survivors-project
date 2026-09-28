@@ -15,6 +15,18 @@ namespace Survivors.Growth
         public const string Invulnerability = "invulnerability";
     }
 
+    public static class BowTraitIds
+    {
+        public const string Weapon = "bow";
+        public const string ExtraShot = "extra_shot";
+        public const string Piercing = "piercing";
+        public const string SplitShot = "split_shot";
+        public const string MarkingShot = "marking_shot";
+        public const string ExplosiveShot = "explosive_shot";
+        public const string FocusedFire = "focused_fire";
+        public const string RapidFire = "rapid_fire";
+    }
+
     [Serializable]
     public sealed class WeaponTraitDefinition
     {
@@ -193,14 +205,14 @@ namespace Survivors.Growth
             return new[]
             {
                 new WeaponDefinition(
-                    "bow", "활", "가장 가까운 적에게 직선 화살을 자동 발사합니다.",
-                    Trait("extra_shot", "추가 발사", "한 번에 발사하는 화살 수가 1발 증가합니다."),
-                    Trait("piercing", "관통", "첫 적중 뒤 적 한 명을 추가로 관통합니다."),
-                    Trait("split_shot", "분열탄", "첫 적중 시 좌우로 작은 화살 두 발이 갈라집니다."),
-                    Trait("marking_shot", "표식탄", "같은 적에게 3회 적중하면 추가 단일 피해를 줍니다."),
-                    Trait("explosive_shot", "폭발탄", "화살이 최종적으로 사라지는 지점에 작은 폭발을 일으킵니다."),
-                    Trait("focused_fire", "집중 화력", "활과 화살의 피해량이 증가합니다."),
-                    Trait("rapid_fire", "신속 발사", "활과 화살의 공격속도가 증가합니다.")),
+                    BowTraitIds.Weapon, "활", "가장 가까운 적에게 직선 화살을 자동 발사합니다.",
+                    Trait(BowTraitIds.ExtraShot, "추가 발사", "한 번에 발사하는 화살 수가 1발 증가합니다."),
+                    Trait(BowTraitIds.Piercing, "관통", "첫 적중 뒤 적 한 명을 추가로 관통합니다."),
+                    Trait(BowTraitIds.SplitShot, "분열탄", "첫 적중 시 좌우로 작은 화살 두 발이 갈라집니다."),
+                    Trait(BowTraitIds.MarkingShot, "표식탄", "같은 적에게 3회 적중하면 추가 단일 피해를 줍니다."),
+                    Trait(BowTraitIds.ExplosiveShot, "폭발탄", "화살이 최종적으로 사라지는 지점에 작은 폭발을 일으킵니다."),
+                    Trait(BowTraitIds.FocusedFire, "집중 화력", "활과 화살의 피해량이 증가합니다."),
+                    Trait(BowTraitIds.RapidFire, "신속 발사", "활과 화살의 공격속도가 증가합니다.")),
                 new WeaponDefinition(
                     "orbiting", "궤도 무기", "플레이어 주변을 공전하며 접촉한 적을 공격합니다.",
                     Trait("extra_blade", "칼날 추가", "공전하는 무기 수가 1개 증가합니다."),

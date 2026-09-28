@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Survivors.Enemies;
 using Survivors.World;
 using UnityEngine;
@@ -9,19 +10,39 @@ namespace Survivors.Player
     {
         private Rigidbody2D body;
         private float remainingLifetime;
-        private int damage;
-        private bool hasHit;
+        private PlayerBowAttack owner;
+        private BowProjectileSnapshot snapshot;
+        private readonly HashSet<EnemyHealth> hitEnemies = new();
+        private Vector2 direction;
+        private int remainingPierces;
+        private bool hasHitEnemy;
+        private bool isDestroyed;
 
         private void Awake()
         {
             body = GetComponent<Rigidbody2D>();
         }
 
-        public void Initialize(Vector2 direction, float speed, float lifetime, int attackDamage)
+        internal void Initialize(
+            PlayerBowAttack attackOwner,
+            Vector2 shotDirection,
+            float speed,
+            float lifetime,
+            BowProjectileSnapshot projectileSnapshot,
+            EnemyHealth ignoredEnemy = null)
         {
+            owner = attackOwner;
+            snapshot = projectileSnapshot;
+            direction = shotDirection.normalized;
             remainingLifetime = lifetime;
-            damage = attackDamage;
-            body.linearVelocity = direction.normalized * speed;
+            remainingPierces = snapshot.RemainingPierces;
+            hitEnemies.Clear();
+            if (ignoredEnemy != null)
+            {
+                hitEnemies.Add(ignoredEnemy);
+            }
+
+            body.linearVelocity = direction * speed;
         }
 
         private void Update()
@@ -36,15 +57,35 @@ namespace Survivors.Player
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (hasHit)
+            if (isDestroyed)
             {
                 return;
             }
 
             EnemyHealth enemy = other.GetComponentInParent<EnemyHealth>();
 
-            if (enemy != null && enemy.TryTakeDamage(damage))
+            if (enemy != null && hitEnemies.Add(enemy) && ApplyDirectDamage(enemy))
             {
+                if (!hasHitEnemy)
+                {
+                    hasHitEnemy = true;
+                    if (snapshot.CanSplit)
+                    {
+                        owner.SpawnSplitArrows(
+                            transform.position,
+                            direction,
+                            snapshot,
+                            enemy);
+                    }
+                }
+
+                if (remainingPierces > 0)
+                {
+                    remainingPierces--;
+                    return;
+                }
+
+                owner.CreateExplosion(transform.position, snapshot);
                 DestroyProjectile();
                 return;
             }
@@ -57,9 +98,27 @@ namespace Survivors.Player
 
         private void DestroyProjectile()
         {
-            hasHit = true;
+            isDestroyed = true;
             body.linearVelocity = Vector2.zero;
             Destroy(gameObject);
+        }
+
+        private bool ApplyDirectDamage(EnemyHealth enemy)
+        {
+            if (owner != null)
+            {
+                BowDamageSource source = snapshot.IsSplitProjectile
+                    ? BowDamageSource.SplitArrowDirect
+                    : BowDamageSource.OriginalArrowDirect;
+                return owner.ApplyBowDamage(
+                    enemy,
+                    snapshot.DirectDamage,
+                    source,
+                    snapshot.AppliesMark,
+                    snapshot.MarkDamage);
+            }
+
+            return enemy.TryTakeDamage(snapshot.DirectDamage);
         }
     }
 }
