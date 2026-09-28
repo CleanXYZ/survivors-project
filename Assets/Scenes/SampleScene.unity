@@ -211,6 +211,7 @@ GameObject:
   - component: {fileID: 276092371}
   - component: {fileID: 276092372}
   - component: {fileID: 276092373}
+  - component: {fileID: 276092374}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -399,6 +400,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Survivors.Player.PlayerHealth
   maxHealth: 20
   invulnerabilityDuration: 0.5
+  regenerationDelayAfterDamage: 5
+  healthRegenerationPerSecond: 1
   pauseDelayAfterDeath: 2
 --- !u!114 &276092363
 MonoBehaviour:
@@ -510,6 +513,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6492d01130444a96a697da777805c640, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Survivors.Growth.GrowthContentLibrary
+  maxHealthBonusPerLevel: 0.1
+  moveSpeedBonusPerLevel: 0.05
+  pickupRangeBonusPerLevel: 0.15
+  globalDamageBonusPerLevel: 0.08
+  globalCooldownReductionPerLevel: 0.06
+  healthRegenerationBonusPerLevel: 0.1
+  experienceGainBonusPerLevel: 0.1
+  invulnerabilityBonusPerLevel: 0.1
 --- !u!114 &276092372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -530,6 +541,18 @@ MonoBehaviour:
   - weaponId: bow
     selectedTraitIds: []
   ownedPassives: []
+--- !u!114 &276092374
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276092355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f2a124fc9d04d44b75b0172b958b455, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Survivors.Player.PlayerPassiveEffects
 --- !u!114 &276092373
 MonoBehaviour:
   m_ObjectHideFlags: 0

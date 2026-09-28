@@ -24,8 +24,10 @@ namespace Survivors.Player
         [SerializeField, Min(0f)] private float pickupRadius = 3f;
 
         private PlayerHealth health;
+        private PlayerPassiveEffects passiveEffects;
         private float timeScaleBeforeLevelUp = 1f;
         private bool pausedForLevelUp;
+        private double unappliedExperienceFraction;
 
         public event Action<int, int, int> ExperienceChanged;
         public event Action<int> LeveledUp;
@@ -34,7 +36,10 @@ namespace Survivors.Player
         public int Level { get; private set; }
         public int CurrentExperience { get; private set; }
         public int ExperienceToNextLevel => CalculateExperienceRequirement(Level);
-        public float PickupRadius => pickupRadius;
+        public float BasePickupRadius => pickupRadius;
+        public float PickupRadius => pickupRadius
+            * (passiveEffects?.PickupRangeMultiplier ?? 1f);
+        public double UnappliedExperienceFraction => unappliedExperienceFraction;
         public PlayerExperienceState State { get; private set; }
         public bool IsLevelUpPending => State == PlayerExperienceState.LevelUpPending;
         public bool CanGainExperience => !health.IsDead && State == PlayerExperienceState.Normal;
@@ -42,6 +47,7 @@ namespace Survivors.Player
         private void Awake()
         {
             health = GetComponent<PlayerHealth>();
+            passiveEffects = GetComponent<PlayerPassiveEffects>();
             Level = startingLevel;
             CurrentExperience = startingExperience;
             State = PlayerExperienceState.Normal;
@@ -70,8 +76,18 @@ namespace Survivors.Player
                 return false;
             }
 
+            double adjustedAmount = amount
+                * (double)(passiveEffects?.ExperienceGainMultiplier ?? 1f)
+                + unappliedExperienceFraction;
+            int wholeExperience = adjustedAmount >= int.MaxValue
+                ? int.MaxValue
+                : (int)Math.Floor(adjustedAmount);
+            unappliedExperienceFraction = adjustedAmount >= int.MaxValue
+                ? 0d
+                : adjustedAmount - wholeExperience;
+
             CurrentExperience = (int)Math.Min(
-                (long)CurrentExperience + amount,
+                (long)CurrentExperience + wholeExperience,
                 int.MaxValue);
             TryBeginLevelUp();
             NotifyChanged();

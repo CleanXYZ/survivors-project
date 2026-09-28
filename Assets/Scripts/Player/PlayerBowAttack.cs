@@ -9,7 +9,7 @@ namespace Survivors.Player
     {
         [Header("Bow Attack")]
         [SerializeField, Min(1)] private int damage = 1;
-        [SerializeField, Min(0f)] private float attackCooldown = 0.75f;
+        [SerializeField, Min(0.01f)] private float attackCooldown = 0.75f;
 
         [Header("Arrow")]
         [SerializeField, Min(0.01f)] private float arrowSpeed = 12f;
@@ -20,34 +20,48 @@ namespace Survivors.Player
         [SerializeField] private Sprite arrowSprite;
 
         private PlayerHealth health;
+        private PlayerPassiveEffects passiveEffects;
         private SpriteRenderer sourceRenderer;
         private float nextAttackTime;
+        private float activeAttackCooldown;
+        private float damageRemainder;
 
         public bool IsAttackOnCooldown => Time.time < nextAttackTime;
+        public float BaseDamage => damage;
+        public float BaseAttackCooldown => attackCooldown;
+        public float AttackCooldown => passiveEffects != null
+            ? passiveEffects.CalculateWeaponCooldown(attackCooldown)
+            : Mathf.Max(0.01f, attackCooldown);
 
         public float AttackCooldownProgress
         {
             get
             {
-                if (!IsAttackOnCooldown || attackCooldown <= 0f)
+                if (!IsAttackOnCooldown || activeAttackCooldown <= 0f)
                 {
                     return 1f;
                 }
 
                 float remainingCooldown = nextAttackTime - Time.time;
-                return 1f - Mathf.Clamp01(remainingCooldown / attackCooldown);
+                return 1f - Mathf.Clamp01(remainingCooldown / activeAttackCooldown);
             }
         }
 
         private void Awake()
         {
             health = GetComponent<PlayerHealth>();
+            passiveEffects = GetComponent<PlayerPassiveEffects>();
             sourceRenderer = GetComponent<SpriteRenderer>();
+            activeAttackCooldown = AttackCooldown;
         }
 
         private void OnEnable()
         {
             health.Died += HandleDeath;
+            if (passiveEffects != null)
+            {
+                passiveEffects.ModifiersChanged += HandleModifiersChanged;
+            }
 
             if (health.IsDead)
             {
@@ -77,7 +91,8 @@ namespace Survivors.Player
             }
 
             FireArrow(direction.normalized);
-            nextAttackTime = Time.time + attackCooldown;
+            activeAttackCooldown = AttackCooldown;
+            nextAttackTime = Time.time + activeAttackCooldown;
         }
 
         private void FireArrow(Vector2 direction)
@@ -104,7 +119,26 @@ namespace Survivors.Player
             arrowCollider.isTrigger = true;
 
             ArrowProjectile projectile = arrowObject.AddComponent<ArrowProjectile>();
-            projectile.Initialize(direction, arrowSpeed, arrowLifetime, damage);
+            float modifiedDamage = passiveEffects != null
+                ? passiveEffects.CalculateWeaponDamage(damage)
+                : damage;
+            float accumulatedDamage = modifiedDamage + damageRemainder;
+            int finalDamage = Mathf.Max(1, Mathf.FloorToInt(accumulatedDamage));
+            damageRemainder = accumulatedDamage - finalDamage;
+            projectile.Initialize(direction, arrowSpeed, arrowLifetime, finalDamage);
+        }
+
+        private void HandleModifiersChanged()
+        {
+            float newCooldown = AttackCooldown;
+            if (IsAttackOnCooldown && activeAttackCooldown > 0f)
+            {
+                float remainingRatio = Mathf.Clamp01(
+                    (nextAttackTime - Time.time) / activeAttackCooldown);
+                nextAttackTime = Time.time + newCooldown * remainingRatio;
+            }
+
+            activeAttackCooldown = newCooldown;
         }
 
         private void HandleDeath()
@@ -118,12 +152,17 @@ namespace Survivors.Player
             {
                 health.Died -= HandleDeath;
             }
+
+            if (passiveEffects != null)
+            {
+                passiveEffects.ModifiersChanged -= HandleModifiersChanged;
+            }
         }
 
         private void OnValidate()
         {
             damage = Mathf.Max(1, damage);
-            attackCooldown = Mathf.Max(0f, attackCooldown);
+            attackCooldown = Mathf.Max(0.01f, attackCooldown);
             arrowSpeed = Mathf.Max(0.01f, arrowSpeed);
             arrowLifetime = Mathf.Max(0.01f, arrowLifetime);
             launchOffset = Mathf.Max(0f, launchOffset);

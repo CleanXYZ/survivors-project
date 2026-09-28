@@ -23,10 +23,12 @@ namespace Survivors.Player
         private InputAction moveAction;
         private Vector2 moveInput;
         private bool enabledActionHere;
+        private PlayerPassiveEffects passiveEffects;
 
+        public float BaseMoveSpeed => moveSpeed;
         public float MoveSpeed
         {
-            get => moveSpeed;
+            get => moveSpeed * (passiveEffects?.MoveSpeedMultiplier ?? 1f);
             set => moveSpeed = Mathf.Max(0f, value);
         }
 
@@ -34,6 +36,7 @@ namespace Survivors.Player
         {
             body = GetComponent<Rigidbody2D>();
             playerCollider = GetComponent<Collider2D>();
+            passiveEffects = GetComponent<PlayerPassiveEffects>();
             body.gravityScale = 0f;
             body.freezeRotation = true;
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
@@ -57,7 +60,7 @@ namespace Survivors.Player
 
         private void FixedUpdate()
         {
-            Vector2 desiredVelocity = moveInput * moveSpeed;
+            Vector2 desiredVelocity = moveInput * MoveSpeed;
 
             if (mapBounds == null)
             {

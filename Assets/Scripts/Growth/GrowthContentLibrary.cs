@@ -3,6 +3,18 @@ using UnityEngine;
 
 namespace Survivors.Growth
 {
+    public static class PassiveIds
+    {
+        public const string MaxHealth = "max_health";
+        public const string MoveSpeed = "move_speed";
+        public const string PickupRange = "pickup_range";
+        public const string GlobalDamage = "global_damage";
+        public const string GlobalAttackSpeed = "global_attack_speed";
+        public const string HealthRegeneration = "health_regeneration";
+        public const string ExperienceGain = "experience_gain";
+        public const string Invulnerability = "invulnerability";
+    }
+
     [Serializable]
     public sealed class WeaponTraitDefinition
     {
@@ -91,6 +103,16 @@ namespace Survivors.Growth
         [SerializeField] private WeaponDefinition[] weapons = CreateDefaultWeapons();
         [SerializeField] private PassiveDefinition[] passives = CreateDefaultPassives();
 
+        [Header("Passive Balance - Bonus Per Level")]
+        [SerializeField, Min(0f)] private float maxHealthBonusPerLevel = 0.10f;
+        [SerializeField, Min(0f)] private float moveSpeedBonusPerLevel = 0.05f;
+        [SerializeField, Min(0f)] private float pickupRangeBonusPerLevel = 0.15f;
+        [SerializeField, Min(0f)] private float globalDamageBonusPerLevel = 0.08f;
+        [SerializeField, Range(0f, 1f)] private float globalCooldownReductionPerLevel = 0.06f;
+        [SerializeField, Min(0f)] private float healthRegenerationBonusPerLevel = 0.10f;
+        [SerializeField, Min(0f)] private float experienceGainBonusPerLevel = 0.10f;
+        [SerializeField, Min(0f)] private float invulnerabilityBonusPerLevel = 0.10f;
+
         public WeaponDefinition[] Weapons => weapons ?? Array.Empty<WeaponDefinition>();
         public PassiveDefinition[] Passives => passives ?? Array.Empty<PassiveDefinition>();
 
@@ -120,6 +142,22 @@ namespace Survivors.Growth
             }
 
             return null;
+        }
+
+        public float GetPassiveBonusPerLevel(string passiveId)
+        {
+            return passiveId switch
+            {
+                PassiveIds.MaxHealth => maxHealthBonusPerLevel,
+                PassiveIds.MoveSpeed => moveSpeedBonusPerLevel,
+                PassiveIds.PickupRange => pickupRangeBonusPerLevel,
+                PassiveIds.GlobalDamage => globalDamageBonusPerLevel,
+                PassiveIds.GlobalAttackSpeed => globalCooldownReductionPerLevel,
+                PassiveIds.HealthRegeneration => healthRegenerationBonusPerLevel,
+                PassiveIds.ExperienceGain => experienceGainBonusPerLevel,
+                PassiveIds.Invulnerability => invulnerabilityBonusPerLevel,
+                _ => 0f
+            };
         }
 
         private void Awake()
@@ -215,15 +253,27 @@ namespace Survivors.Growth
         {
             return new[]
             {
-                new PassiveDefinition("max_health", "최대 HP 증가", "최대 HP와 현재 HP가 함께 증가합니다."),
-                new PassiveDefinition("move_speed", "이동속도 증가", "플레이어의 기본 이동속도가 증가합니다."),
-                new PassiveDefinition("pickup_range", "아이템 획득 범위 증가", "경험치 오브젝트의 추적 시작 범위가 증가합니다."),
-                new PassiveDefinition("global_damage", "전역 무기 공격력 증가", "모든 자동 무기의 피해량이 증가합니다."),
-                new PassiveDefinition("global_attack_speed", "전역 무기 공격속도 증가", "모든 자동 무기의 공격 빈도가 증가합니다."),
-                new PassiveDefinition("health_regeneration", "체력 재생속도 증가", "무피격 체력 재생의 초당 회복량이 증가합니다."),
-                new PassiveDefinition("experience_gain", "경험치 획득량 증가", "경험치 오브젝트가 제공하는 값이 증가합니다."),
-                new PassiveDefinition("invulnerability", "피격 후 무적시간 증가", "피격 뒤 적용되는 전역 무적시간이 증가합니다.")
+                new PassiveDefinition(PassiveIds.MaxHealth, "최대 HP 증가", "최대 HP와 현재 HP가 함께 증가합니다."),
+                new PassiveDefinition(PassiveIds.MoveSpeed, "이동속도 증가", "플레이어의 기본 이동속도가 증가합니다."),
+                new PassiveDefinition(PassiveIds.PickupRange, "아이템 획득 범위 증가", "경험치 오브젝트의 추적 시작 범위가 증가합니다."),
+                new PassiveDefinition(PassiveIds.GlobalDamage, "전역 무기 공격력 증가", "모든 자동 무기의 피해량이 증가합니다."),
+                new PassiveDefinition(PassiveIds.GlobalAttackSpeed, "전역 무기 공격속도 증가", "모든 자동 무기의 공격 빈도가 증가합니다."),
+                new PassiveDefinition(PassiveIds.HealthRegeneration, "체력 재생속도 증가", "무피격 체력 재생의 초당 회복량이 증가합니다."),
+                new PassiveDefinition(PassiveIds.ExperienceGain, "경험치 획득량 증가", "경험치 오브젝트가 제공하는 값이 증가합니다."),
+                new PassiveDefinition(PassiveIds.Invulnerability, "피격 후 무적시간 증가", "피격 뒤 적용되는 전역 무적시간이 증가합니다.")
             };
+        }
+
+        private void OnValidate()
+        {
+            maxHealthBonusPerLevel = Mathf.Max(0f, maxHealthBonusPerLevel);
+            moveSpeedBonusPerLevel = Mathf.Max(0f, moveSpeedBonusPerLevel);
+            pickupRangeBonusPerLevel = Mathf.Max(0f, pickupRangeBonusPerLevel);
+            globalDamageBonusPerLevel = Mathf.Max(0f, globalDamageBonusPerLevel);
+            globalCooldownReductionPerLevel = Mathf.Clamp01(globalCooldownReductionPerLevel);
+            healthRegenerationBonusPerLevel = Mathf.Max(0f, healthRegenerationBonusPerLevel);
+            experienceGainBonusPerLevel = Mathf.Max(0f, experienceGainBonusPerLevel);
+            invulnerabilityBonusPerLevel = Mathf.Max(0f, invulnerabilityBonusPerLevel);
         }
     }
 }
